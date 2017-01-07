@@ -886,6 +886,31 @@ class Cluster(base.QueryableModel):
         }))
         return self.request
 
+    def run_service_check(self, service_name):
+        """Run a service check for the specified service.
+
+        Invokes the Run Service Check for the given service
+
+        :param service_name: Service name
+        :return: Current status of the request
+        """
+        service = service_name.upper()
+        if service == "ZOOKEEPER":
+            command = "{}_QUORUM_SERVICE_CHECK".format(service)
+        else:
+            command = "{}_SERVICE_CHECK".format(service)
+
+        self.load(self.client.post(self.cluster.requests.url, data={
+            "RequestInfo": {
+                "context": "{} Service Check".format(service),
+                "command": command
+            },
+            "Requests/resource_filters": [{
+                "service_name": service,
+            }],
+        }))
+        return self.request
+
     def decommission(self, service, hosts):
         self.commission(service, hosts, "decommission")
 
